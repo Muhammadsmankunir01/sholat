@@ -3,383 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Absensi Sholat Siswa</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Aplikasi Absensi Sholat Jamaah</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2, h3 { text-align: center; color: #333; }
+        .nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        button { padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #a71d2a; }
+        .section { display: none; }
+        .active { display: block; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        #barcode-card { text-align: center; margin-top: 15px; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+        #reader { width: 100%; max-width: 400px; margin: auto; }
+    </style>
 </head>
-<body class="bg-light">
-
-<nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1">Absensi Sholat Jamaah</span>
-        <div id="navRight">
-            </div>
-    </div>
-</nav>
+<body>
 
 <div class="container">
-
-    <div id="loginSection" class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow-sm mt-4">
-                <div class="card-header bg-white text-center fw-bold">Login Admin</div>
-                <div class="card-body">
-                    <div id="loginAlert" class="alert alert-danger d-none">Username / Password salah!</div>
-                    <form onsubmit="handleLogin(event)">
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" id="loginUser" class="form-control" placeholder="admin" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" id="loginPass" class="form-control" placeholder="admin" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <h2>Sistem Absensi Sholat Jamaah</h2>
+    
+    <div class="nav">
+        <button onclick="showSection('login-sec')">Login Admin</button>
+        <button onclick="showSection('scan-sec')">Scan Barcode (Absen)</button>
     </div>
 
-    <div id="adminDashboard" class="d-none">
+    <!-- Halaman Login Admin -->
+    <div id="login-sec" class="section active">
+        <h3>Login Admin</h3>
+        <input type="text" id="username" placeholder="Username (admin)">
+        <input type="password" id="password" placeholder="Password (admin)">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Panel Admin -->
+    <div id="admin-sec" class="section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>Panel Admin</h3>
+            <button class="btn-danger" onclick="logout()">Logout</button>
+        </div>
+
+        <b>Tambah Siswa Baru</b>
+        <input type="text" id="nis" placeholder="NIS / ID Siswa">
+        <input type="text" id="nama" placeholder="Nama Siswa">
+        <input type="text" id="kelas" placeholder="Kelas">
+        <button onclick="tambahSiswa()">Simpan & Buat Barcode</button>
+
+        <div id="barcode-card" style="display:none;">
+            <h4>Barcode Berhasil Dibuat!</h4>
+            <p id="card-nama"></p>
+            <svg id="barcode"></svg>
+            <br>
+            <button onclick="window.print()">Cetak Barcode</button>
+        </div>
+
+        <h3 style="margin-top:30px;">Rekapitulasi Absensi Sholat</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Waktu</th>
+                    <th>NIS</th>
+                    <th>Nama</th>
+                    <th>Kelas</th>
+                    <th>Sholat</th>
+                </tr>
+            </thead>
+            <tbody id="rekap-table"></tbody>
+        </table>
+    </div>
+
+    <!-- Halaman Scanner (Absensi) -->
+    <div id="scan-sec" class="section">
+        <h3>Scanner Kamera Absensi</h3>
+        <label for="jenis-sholat"><b>Pilih Sholat:</b></label>
+        <select id="jenis-sholat">
+            <option value="Dhuha">Dhuha</option>
+            <option value="Dhuhur">Dhuhur</option>
+            <option value="Ashar">Ashar</option>
+        </select>
         
-        <ul class="nav nav-tabs mb-4" id="adminTab" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" id="scan-tab" data-bs-toggle="tab" data-bs-target="#scanPane" type="button" onclick="startScanner()">Scan Absensi</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="user-tab" data-bs-toggle="tab" data-bs-target="#userPane" type="button" onclick="stopScanner()">Kelola Data Siswa</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="rekap-tab" data-bs-toggle="tab" data-bs-target="#rekapPane" type="button" onclick="stopScanner(); renderRekap();">Rekapitulasi</button>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="adminTabContent">
-            
-            <div class="tab-pane fade show active" id="scanPane">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-primary text-white font-weight-bold">Kamera Scanner</div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Pilih Waktu Sholat:</label>
-                                    <select id="sholatSelect" class="form-select">
-                                        <option value="Dhuha">Dhuha</option>
-                                        <option value="Dzuhur">Dzuhur</option>
-                                        <option value="Ashar">Ashar</option>
-                                    </select>
-                                </div>
-                                <div id="reader" style="width: 100%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-success text-white font-weight-bold">Log Hadir Hari Ini</div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Waktu</th>
-                                                <th>NIS</th>
-                                                <th>Nama</th>
-                                                <th>Sholat</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="logTableBody"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-pane fade" id="userPane">
-                <div class="row g-4">
-                    <div class="col-md-5">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-dark text-white">Tambah Siswa Baru</div>
-                            <div class="card-body">
-                                <form onsubmit="handleAddUser(event)">
-                                    <div class="mb-3">
-                                        <label class="form-label">NIS (Nomor Induk Siswa)</label>
-                                        <input type="text" id="newNis" class="form-control" required placeholder="Contoh: 1001">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Nama Lengkap</label>
-                                        <input type="text" id="newName" class="form-control" required placeholder="Contoh: Ahmad Fauzi">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Kelas</label>
-                                        <input type="text" id="newClass" class="form-control" required placeholder="Contoh: X-IPA 1">
-                                    </div>
-                                    <button type="submit" class="btn btn-success w-100">Simpan & Buat Barcode</button>
-                                </form>
-                            </div>
-                        </div>
-                        
-                        <div id="qrResultCard" class="card shadow-sm mt-3 d-none">
-                            <div class="card-body text-center">
-                                <h6 class="card-title" id="qrStudentName">Barcode Siswa</h6>
-                                <div id="qrcode" class="d-flex justify-content-center my-3"></div>
-                                <small class="text-muted">Cetak/Screenshot barcode ini untuk kartu pelajar siswa.</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-7">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-dark text-white">Daftar Akun Siswa</div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>NIS</th>
-                                                <th>Nama</th>
-                                                <th>Kelas</th>
-                                                <th>Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="studentTableBody"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-pane fade" id="rekapPane">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                        <span>Rekap Data Kehadiran</span>
-                        <button onclick="clearAllData()" class="btn btn-sm btn-danger">Hapus Semua Data Absens</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Tanggal & Waktu</th>
-                                        <th>NIS</th>
-                                        <th>Nama Siswa</th>
-                                        <th>Kelas</th>
-                                        <th>Sholat</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rekapTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+        <div id="reader"></div>
+        <div id="scan-result" style="text-align:center; font-weight:bold; margin-top:15px; color:green;"></div>
     </div>
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    // State Management (LocalStorage)
-    let students = JSON.parse(localStorage.getItem('absensi_students')) || [];
-    let logs = JSON.parse(localStorage.getItem('absensi_logs')) || [];
+    // Data Default & Inisialisasi LocalStorage
+    if (!localStorage.getItem('siswaDB')) localStorage.setItem('siswaDB', JSON.stringify([]));
+    if (!localStorage.getItem('absenDB')) localStorage.setItem('absenDB', JSON.stringify([]));
+
     let html5QrcodeScanner = null;
 
-    // Direct Login Check saat halaman dibuka
-    window.onload = function() {
-        if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
-            showDashboard();
-        }
-    };
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
 
-    // Handler Login Admin
-    function handleLogin(e) {
-        e.preventDefault();
-        const u = document.getElementById('loginUser').value;
-        const p = document.getElementById('loginPass').value;
+        if (id === 'scan-sec') {
+            startScanner();
+        } else if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+        }
+    }
+
+    // Fitur Auth Admin
+    function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
 
         if (u === 'admin' && p === 'admin') {
-            sessionStorage.setItem('isAdminLoggedIn', 'true');
-            document.getElementById('loginAlert').classList.add('d-none');
-            showDashboard();
+            showSection('admin-sec');
+            loadRekap();
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
         } else {
-            document.getElementById('loginAlert').classList.remove('d-none');
+            alert('Username atau Password salah!');
         }
     }
 
     function logout() {
-        stopScanner();
-        sessionStorage.removeItem('isAdminLoggedIn');
-        document.getElementById('adminDashboard').classList.add('d-none');
-        document.getElementById('loginSection').classList.remove('d-none');
-        document.getElementById('navRight').innerHTML = '';
+        showSection('login-sec');
     }
 
-    function showDashboard() {
-        document.getElementById('loginSection').classList.add('d-none');
-        document.getElementById('adminDashboard').classList.remove('d-none');
-        document.getElementById('navRight').innerHTML = `<button onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>`;
-        renderStudents();
-        renderLog();
-        startScanner();
-    }
+    // Fitur Tambah Siswa & Generate Barcode
+    function tambahSiswa() {
+        const nis = document.getElementById('nis').value.trim();
+        const nama = document.getElementById('nama').value.trim();
+        const kelas = document.getElementById('kelas').value.trim();
 
-    // Handler Tambah Siswa & Generate Barcode
-    function handleAddUser(e) {
-        e.preventDefault();
-        const nis = document.getElementById('newNis').value.trim();
-        const name = document.getElementById('newName').value.trim();
-        const className = document.getElementById('newClass').value.trim();
+        if (!nis || !nama || !kelas) {
+            alert('Harap isi semua kolom!');
+            return;
+        }
 
-        // Cek duplicate NIS
-        if (students.some(s => s.nis === nis)) {
+        let siswaDB = JSON.parse(localStorage.getItem('siswaDB'));
+        if (siswaDB.some(s => s.nis === nis)) {
             alert('NIS sudah terdaftar!');
             return;
         }
 
-        const newStudent = { nis, name, className };
-        students.push(newStudent);
-        localStorage.setItem('absensi_students', JSON.stringify(students));
+        siswaDB.push({ nis, nama, kelas });
+        localStorage.setItem('siswaDB', JSON.stringify(siswaDB));
 
-        renderStudents();
-        generateQRCode(nis, name);
+        // Generate Barcode menggunakan JsBarcode
+        document.getElementById('barcode-card').style.display = 'block';
+        document.getElementById('card-nama').innerText = `${nama} (${kelas})`;
+        JsBarcode("#barcode", nis, { format: "CODE128", width: 2, height: 50 });
 
-        // Reset Form Input
-        document.getElementById('newNis').value = '';
-        document.getElementById('newName').value = '';
-        document.getElementById('newClass').value = '';
+        // Reset Form
+        document.getElementById('nis').value = '';
+        document.getElementById('nama').value = '';
+        document.getElementById('kelas').value = '';
     }
 
-    // Generate Barcode/QR Code
-    function generateQRCode(nis, name) {
-        const qrContainer = document.getElementById('qrcode');
-        qrContainer.innerHTML = ''; // Clear QR sebelumnya
-
-        new QRCode(qrContainer, {
-            text: nis,
-            width: 150,
-            height: 150
-        });
-
-        document.getElementById('qrStudentName').innerText = `QR Code: ${name} (${nis})`;
-        document.getElementById('qrResultCard').classList.remove('d-none');
-    }
-
-    function renderStudents() {
-        const tbody = document.getElementById('studentTableBody');
+    // Fitur Rekapitulasi Data Absen
+    function loadRekap() {
+        const absenDB = JSON.parse(localStorage.getItem('absenDB')) || [];
+        const tbody = document.getElementById('rekap-table');
         tbody.innerHTML = '';
-        students.forEach((s, index) => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${s.nis}</td>
-                    <td>${s.name}</td>
-                    <td>${s.className}</td>
-                    <td>
-                        <button onclick="generateQRCode('${s.nis}', '${s.name}')" class="btn btn-sm btn-info text-white">Lihat QR</button>
-                        <button onclick="deleteStudent(${index})" class="btn btn-sm btn-danger">Hapus</button>
-                    </td>
-                </tr>
-            `;
+
+        absenDB.reverse().forEach(data => {
+            const row = `<tr>
+                <td>${data.waktu}</td>
+                <td>${data.nis}</td>
+                <td>${data.nama}</td>
+                <td>${data.kelas}</td>
+                <td><b>${data.sholat}</b></td>
+            </tr>`;
+            tbody.innerHTML += row;
         });
     }
 
-    function deleteStudent(index) {
-        if (confirm('Hapus siswa ini?')) {
-            students.splice(index, 1);
-            localStorage.setItem('absensi_students', JSON.stringify(students));
-            renderStudents();
-        }
-    }
-
-    // Kamera Scanner Functions
+    // Fitur Scanning Kamera
     function startScanner() {
-        if (html5QrcodeScanner) return; // Mencegah double scanner
+        if (html5QrcodeScanner) html5QrcodeScanner.clear();
 
         html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
         html5QrcodeScanner.render(onScanSuccess);
     }
 
-    function stopScanner() {
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.clear();
-            html5QrcodeScanner = null;
-        }
-    }
-
     function onScanSuccess(decodedText) {
-        const student = students.find(s => s.nis === decodedText);
-        const sholat = document.getElementById('sholatSelect').value;
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        const dateStr = now.toLocaleDateString('id-ID');
+        const siswaDB = JSON.parse(localStorage.getItem('siswaDB')) || [];
+        const siswa = siswaDB.find(s => s.nis === decodedText);
 
-        if (!student) {
-            alert(`Siswa dengan NIS [${decodedText}] tidak ditemukan dalam sistem!`);
+        if (siswa) {
+            const jenisSholat = document.getElementById('jenis-sholat').value;
+            const waktuSekarang = new Date().toLocaleString('id-ID');
+            
+            let absenDB = JSON.parse(localStorage.getItem('absenDB'));
+            
+            // Simpan data absensi
+            absenDB.push({
+                waktu: waktuSekarang,
+                nis: siswa.nis,
+                nama: siswa.nama,
+                kelas: siswa.kelas,
+                sholat: jenisSholat
+            });
+            
+            localStorage.setItem('absenDB', JSON.stringify(absenDB));
+            
+            const resultDiv = document.getElementById('scan-result');
+            resultDiv.innerText = `[SUCCESS] Absen ${jenisSholat} Berhasil: ${siswa.nama} (${siswa.kelas})`;
+            
+            // Suara bip atau penanda sukses dapat ditambahkan di sini
+            setTimeout(() => { resultDiv.innerText = ''; }, 3000);
         } else {
-            const newLog = {
-                timestamp: `${dateStr} ${timeStr}`,
-                nis: student.nis,
-                name: student.name,
-                className: student.className,
-                sholat: sholat
-            };
-
-            logs.unshift(newLog);
-            localStorage.setItem('absensi_logs', JSON.stringify(logs));
-            renderLog();
-            alert(`BERHASIL: Absensi ${student.name} (${sholat}) Tercatat!`);
-        }
-
-        // Pause sejenak scanner agar tidak memindai terus menerus
-        html5QrcodeScanner.clear();
-        setTimeout(startScanner, 2500);
-    }
-
-    function renderLog() {
-        const tbody = document.getElementById('logTableBody');
-        tbody.innerHTML = '';
-        logs.slice(0, 10).forEach(l => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${l.timestamp.split(' ')[1]}</td>
-                    <td>${l.nis}</td>
-                    <td>${l.name}</td>
-                    <td><span class="badge bg-success">${l.sholat}</span></td>
-                </tr>
-            `;
-        });
-    }
-
-    function renderRekap() {
-        const tbody = document.getElementById('rekapTableBody');
-        tbody.innerHTML = '';
-        logs.forEach(l => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${l.timestamp}</td>
-                    <td>${l.nis}</td>
-                    <td>${l.name}</td>
-                    <td>${l.className}</td>
-                    <td><span class="badge bg-primary">${l.sholat}</span></td>
-                </tr>
-            `;
-        });
-    }
-
-    function clearAllData() {
-        if (confirm("Hapus seluruh data log kehadiran?")) {
-            logs = [];
-            localStorage.removeItem('absensi_logs');
-            renderLog();
-            renderRekap();
+            alert('Barcode tidak dikenali / Siswa tidak terdaftar!');
         }
     }
 </script>
