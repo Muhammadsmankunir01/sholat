@@ -1,224 +1,1769 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Absensi Sholat Jamaah</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <title>Media Pembelajaran Interaktif PAI dan Budi Pekerti Kelas X</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2, h3 { text-align: center; color: #333; }
-        .nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        button { padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #a71d2a; }
-        .section { display: none; }
-        .active { display: block; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background-color: #007bff; color: white; }
-        #barcode-card { text-align: center; margin-top: 15px; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-        #reader { width: 100%; max-width: 400px; margin: auto; }
+        /* ==========================================================================
+           1. CSS VARIABLES & THEME SETUP
+           ========================================================================== */
+        :root {
+            --primary: #0d9488;
+            --primary-hover: #0f766e;
+            --secondary: #6366f1;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            
+            --bg-base: #f8fafc;
+            --bg-surface: rgba(255, 255, 255, 0.85);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --border-color: rgba(226, 232, 240, 0.8);
+            
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-white: #ffffff;
+            
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.08);
+            --shadow-lg: 0 20px 30px -10px rgba(0,0,0,0.12);
+            
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-blur: blur(12px);
+            
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #14b8a6;
+            --primary-hover: #2dd4bf;
+            --secondary: #818cf8;
+            --accent: #fbbf24;
+            
+            --bg-base: #0f172a;
+            --bg-surface: rgba(30, 41, 59, 0.85);
+            --bg-card: rgba(30, 41, 59, 0.95);
+            --border-color: rgba(51, 65, 85, 0.8);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        /* Prevent Text Copying globally for Security Rules */
+        .no-copy {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* ==========================================================================
+           2. BASE STYLES & RESET
+           ========================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Utility Components */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--text-white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--text-white);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: var(--text-white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--text-white);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ==========================================================================
+           3. AUTH / LOGIN OVERLAY
+           ========================================================================== */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: linear-gradient(135deg, #0f172a 0%, #0d9488 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        [data-theme="dark"] .login-card {
+            background: rgba(30, 41, 59, 0.9);
+            color: var(--text-main);
+        }
+
+        .login-header {
+            margin-bottom: 2rem;
+        }
+
+        .login-header i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border-color);
+            background: var(--bg-base);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+        }
+
+        /* ==========================================================================
+           4. LAYOUT STRUCTURE (Header, Sidebar, Main, Footer)
+           ========================================================================== */
+        .app-container {
+            display: flex;
+            flex: 1;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header i {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.35rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: var(--primary);
+            color: var(--text-white);
+        }
+
+        .sidebar-link i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Wrapper */
+        .main-wrapper {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        /* Header Styling */
+        .header {
+            height: 70px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .user-profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 50px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Main Content Container */
+        .content {
+            padding: 2rem;
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* View Section Management */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Footer Styling */
+        .footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: auto;
+        }
+
+        /* ==========================================================================
+           5. DASHBOARD & SPECIFIC VIEW COMPONENTS
+           ========================================================================== */
+        
+        /* Progres Bar Container */
+        .progress-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .progress-bar-bg {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Lock Overlay & Topic Cards */
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .topic-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .topic-card.locked {
+            opacity: 0.65;
+            filter: grayscale(0.8);
+            pointer-events: none;
+        }
+
+        .lock-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            padding: 0.4rem 0.8rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Accordion / Tabbed Material Style */
+        .tab-navigation {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.25rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .material-content-box {
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .material-content-box h3 {
+            margin: 1.2rem 0 0.6rem 0;
+            color: var(--primary);
+        }
+
+        .material-content-box p {
+            margin-bottom: 1rem;
+        }
+
+        /* ==========================================================================
+           6. GAME ENGINE & INTERACTIVE STYLES
+           ========================================================================== */
+        .game-container {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .timer-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Drag & Drop Specifics */
+        .drag-zone {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .draggable-item {
+            padding: 0.8rem 1.2rem;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius-md);
+            cursor: grab;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .drop-zone {
+            width: 100%;
+            min-height: 80px;
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        /* Memory Card Specifics */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: var(--secondary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 2px solid var(--primary);
+        }
+
+        /* Quiz / Exam Option Buttons */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background: rgba(13, 148, 136, 0.15);
+        }
+
+        .option-btn.correct {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .option-btn.wrong {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* ==========================================================================
+           7. MODAL, TOAST, AND SCROLL TO TOP
+           ========================================================================== */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            padding: 0.8rem 1.25rem;
+            border-radius: var(--radius-md);
+            background: var(--text-main);
+            color: var(--bg-base);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInRight 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 800;
+            transition: var(--transition);
+        }
+
+        .scroll-top-btn:hover {
+            transform: translateY(-3px);
+            background: var(--primary-hover);
+        }
+
+        /* ==========================================================================
+           8. RESPONSIVE DESIGN (MOBILE FIRST OVERRIDES)
+           ========================================================================== */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-wrapper {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .content {
+                padding: 1.25rem;
+            }
+            .header {
+                padding: 0 1rem;
+            }
+            .memory-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
 </head>
-<body>
+<body class="no-copy">
 
-<div class="container">
-    <h2>Sistem Absensi Sholat Jamaah</h2>
-    
-    <div class="nav">
-        <button onclick="showSection('login-sec')">Login Admin</button>
-        <button onclick="showSection('scan-sec')">Scan Barcode (Absen)</button>
-    </div>
-
-    <!-- Halaman Login Admin -->
-    <div id="login-sec" class="section active">
-        <h3>Login Admin</h3>
-        <input type="text" id="username" placeholder="Username (admin)">
-        <input type="password" id="password" placeholder="Password (admin)">
-        <button onclick="login()">Login</button>
-    </div>
-
-    <!-- Panel Admin -->
-    <div id="admin-sec" class="section">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>Panel Admin</h3>
-            <button class="btn-danger" onclick="logout()">Logout</button>
+    <!-- ==========================================================================
+         AUTHENTICATION / LOGIN OVERLAY
+         ========================================================================== -->
+    <div id="auth-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fa-solid fa-book-quran"></i>
+                <h2>PAI & Budi Pekerti</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Kelas X Semester Ganjil</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="student-name"><i class="fa-solid fa-user"></i> Nama Lengkap Siswa</label>
+                    <input type="text" id="student-name" class="form-control" placeholder="Masukkan nama lengkap..." required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="student-school"><i class="fa-solid fa-school"></i> Sekolah Asal</label>
+                    <input type="text" id="student-school" class="form-control" placeholder="Contoh: SMAN 1 Kunir" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="secret-pin"><i class="fa-solid fa-key"></i> PIN Akses Media</label>
+                    <input type="password" id="secret-pin" class="form-control" placeholder="Default PIN: 123456" maxlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk Pembelajaran
+                </button>
+            </form>
         </div>
-
-        <b>Tambah Siswa Baru</b>
-        <input type="text" id="nis" placeholder="NIS / ID Siswa">
-        <input type="text" id="nama" placeholder="Nama Siswa">
-        <input type="text" id="kelas" placeholder="Kelas">
-        <button onclick="tambahSiswa()">Simpan & Buat Barcode</button>
-
-        <div id="barcode-card" style="display:none;">
-            <h4>Barcode Berhasil Dibuat!</h4>
-            <p id="card-nama"></p>
-            <svg id="barcode"></svg>
-            <br>
-            <button onclick="window.print()">Cetak Barcode</button>
-        </div>
-
-        <h3 style="margin-top:30px;">Rekapitulasi Absensi Sholat</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Waktu</th>
-                    <th>NIS</th>
-                    <th>Nama</th>
-                    <th>Kelas</th>
-                    <th>Sholat</th>
-                </tr>
-            </thead>
-            <tbody id="rekap-table"></tbody>
-        </table>
     </div>
 
-    <!-- Halaman Scanner (Absensi) -->
-    <div id="scan-sec" class="section">
-        <h3>Scanner Kamera Absensi</h3>
-        <label for="jenis-sholat"><b>Pilih Sholat:</b></label>
-        <select id="jenis-sholat">
-            <option value="Dhuha">Dhuha</option>
-            <option value="Dhuhur">Dhuhur</option>
-            <option value="Ashar">Ashar</option>
-        </select>
+    <!-- ==========================================================================
+         MAIN APPLICATION STRUCTURE
+         ========================================================================== -->
+    <div class="app-container">
         
-        <div id="reader"></div>
-        <div id="scan-result" style="text-align:center; font-weight:bold; margin-top:15px; color:green;"></div>
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-mosque"></i>
+                <div>
+                    <h4 style="font-size: 1.05rem; font-weight: 700;">PAI & Budi Pekerti</h4>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">SMAN 1 Kunir</span>
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a class="sidebar-link active" onclick="navTo('beranda')">
+                        <i class="fa-solid fa-house"></i> Beranda
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('petunjuk')">
+                        <i class="fa-solid fa-circle-info"></i> Petunjuk
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('materi')">
+                        <i class="fa-solid fa-book-open"></i> Materi Interaktif
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('game')">
+                        <i class="fa-solid fa-gamepad"></i> Mini Game
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('latihan')">
+                        <i class="fa-solid fa-pen-to-square"></i> Latihan Soal
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('evaluasi')">
+                        <i class="fa-solid fa-file-signature"></i> Evaluasi Akhir
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('ringkasan')">
+                        <i class="fa-solid fa-box-archive"></i> Ringkasan
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('referensi')">
+                        <i class="fa-solid fa-bookmark"></i> Referensi
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="navTo('profil')">
+                        <i class="fa-solid fa-user-tie"></i> Profil Penyusun
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT WRAPPER -->
+        <div class="main-wrapper">
+            
+            <!-- HEADER TOOLBAR -->
+            <header class="header glass">
+                <div class="header-left">
+                    <button class="menu-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="user-profile-badge">
+                        <div class="user-avatar" id="avatar-initial">S</div>
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 700;" id="user-display-name">Siswa</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);" id="user-display-school">Sekolah</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button class="btn btn-outline" style="padding: 0.5rem 0.8rem;" onclick="toggleTheme()">
+                        <i class="fa-solid fa-moon" id="theme-icon"></i>
+                    </button>
+                    <button class="btn btn-danger" style="padding: 0.5rem 0.8rem;" onclick="logout()">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN DYNAMIC CONTENT CONTAINER -->
+            <main class="content">
+                
+                <!-- BREADCRUMB -->
+                <div class="breadcrumb">
+                    <a onclick="navTo('beranda')">Beranda</a>
+                    <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+                    <span id="breadcrumb-current">Beranda</span>
+                </div>
+
+                <!-- ==========================================================================
+                     VIEW 1: BERANDA
+                     ========================================================================== -->
+                <section id="view-beranda" class="view-section active">
+                    <div class="progress-card">
+                        <h2>Assalamu'alaikum, <span id="welcome-name">Siswa</span>!</h2>
+                        <p style="margin-top: 0.5rem; opacity: 0.9;">Selamat datang di Media Pembelajaran Interaktif PAI dan Budi Pekerti Kelas X Semester Ganjil.</p>
+                        <div style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600;">
+                                <span>Progres Total Pembelajaran</span>
+                                <span id="total-progress-percentage">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="total-progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-layer-group"></i> Tema Pembelajaran</h3>
+                    
+                    <div class="topic-grid">
+                        <!-- TEMA 1 -->
+                        <div class="topic-card" id="card-tema-1">
+                            <div>
+                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Tema 1</h4>
+                                <h3>Hakikat Cinta Dalam Menggapai Rida Allah</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Memahami konsep Mahabbah, tanda-tanda cinta Ilahi, dan penerapannya dalam kehidupan.</p>
+                            </div>
+                            <button class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;" onclick="openTema(1)">
+                                <i class="fa-solid fa-book"></i> Pelajari Tema 1
+                            </button>
+                        </div>
+
+                        <!-- TEMA 2 -->
+                        <div class="topic-card locked" id="card-tema-2">
+                            <span class="lock-badge" id="badge-tema-2"><i class="fa-solid fa-lock"></i> Terkunci</span>
+                            <div>
+                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Tema 2</h4>
+                                <h3>Hakikat Khauf, Raja', Tawakal, dan Tobat</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Sikap mental spiritual muslim dalam mengharap dan takut hanya kepada Allah SWT.</p>
+                            </div>
+                            <button class="btn btn-primary" id="btn-tema-2" style="margin-top: 1.5rem; width: 100%;" onclick="openTema(2)" disabled>
+                                <i class="fa-solid fa-book"></i> Pelajari Tema 2
+                            </button>
+                        </div>
+
+                        <!-- TEMA 3 -->
+                        <div class="topic-card locked" id="card-tema-3">
+                            <span class="lock-badge" id="badge-tema-3"><i class="fa-solid fa-lock"></i> Terkunci</span>
+                            <div>
+                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Tema 3</h4>
+                                <h3>Menghindari Penyakit Hati</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Mencegah sifat berfoya-foya, riya', sum'ah, takabur, hasad, ghadab, dan ghibah.</p>
+                            </div>
+                            <button class="btn btn-primary" id="btn-tema-3" style="margin-top: 1.5rem; width: 100%;" onclick="openTema(3)" disabled>
+                                <i class="fa-solid fa-book"></i> Pelajari Tema 3
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 2: PETUNJUK
+                     ========================================================================== -->
+                <section id="view-petunjuk" class="view-section">
+                    <div class="card">
+                        <h2 style="color: var(--primary); margin-bottom: 1.5rem;"><i class="fa-solid fa-circle-info"></i> Petunjuk Penggunaan Media</h2>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+                                <div>
+                                    <h4>Sistem Progres Akses Pembelajaran</h4>
+                                    <p style="color: var(--text-muted); font-size: 0.95rem;">Materi dirancang secara berurutan (*sequential*). Anda wajib mempelajari dan menyelesaikan **Tema 1** (termasuk Latihan Soal) sebelum akses **Tema 2** terbuka. Demikian seterusnya hingga Tema 3.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+                                <div>
+                                    <h4>Fitur Mini Game & Latihan</h4>
+                                    <p style="color: var(--text-muted); font-size: 0.95rem;">Setiap game memiliki batas waktu 1 menit (60 detik) untuk menguji ketangkasan dan pemahaman materi Anda. Latihan terdiri dari 10 soal untuk mengukur pemahaman per tema.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+                                <div>
+                                    <h4>Evaluasi Akhir</h4>
+                                    <p style="color: var(--text-muted); font-size: 0.95rem;">Evaluasi berisi 10 soal komprehensif dari seluruh materi semester ganjil. Kerjakan dengan jujur dan cermat untuk mendapatkan rekap nilai lengkap.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 3: MATERI INTERAKTIF
+                     ========================================================================== -->
+                <section id="view-materi" class="view-section">
+                    <div class="card">
+                        <div class="tab-navigation">
+                            <button class="tab-btn active" onclick="switchMaterialTab(1)">Tema 1: Hakikat Cinta</button>
+                            <button class="tab-btn" id="tab-btn-2" onclick="switchMaterialTab(2)">Tema 2: Khauf, Raja', Tawakal, Tobat</button>
+                            <button class="tab-btn" id="tab-btn-3" onclick="switchMaterialTab(3)">Tema 3: Penyakit Hati</button>
+                        </div>
+
+                        <!-- MATERIAL CONTENT TEMA 1 -->
+                        <div id="material-tab-1" class="material-tab-content">
+                            <h2 style="color: var(--primary); margin-bottom: 1rem;">Hakikat Cinta (Mahabbah) dalam Menggapai Rida Allah SWT</h2>
+                            <div class="material-content-box">
+                                <p><strong>Mahabbah (Cinta)</strong> kepada Allah SWT adalah tingkatan spiritual tertinggi seorang hamba. Cinta kepada Allah berarti mengutamakan apa yang dicintai Allah di atas keinginan hawa nafsu pribadi.</p>
+                                
+                                <h3>Ciri-Ciri Cinta Kepada Allah SWT:</h3>
+                                <ul>
+                                    <li>Mencintai Al-Qur'an dan Rasulullah SAW sebagai jalan mengenal Allah.</li>
+                                    <li>Selalu mengingat Allah (Zikrullah) dalam setiap keadaan.</li>
+                                    <li>Rela berkorban di jalan Allah baik harta, waktu, maupun jiwa.</li>
+                                    <li>Melaksanakan perintah-Nya dengan penuh ketulusan dan kegembiraan, bukan beban.</li>
+                                </ul>
+
+                                <h3 style="margin-top: 1.5rem;">Cara Menumbuhkan Mahabbah:</h3>
+                                <p>Memahami betapa luasnya nikmat dan kasih sayang Allah (Rahman dan Rahim), mempelajari Asmaul Husna, serta merenungi keindahan ciptaan-Nya di alam semesta.</p>
+                            </div>
+                            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="completeTopic(1)">
+                                <i class="fa-solid fa-check-circle"></i> Selesaikan Tema 1 & Lanjut Game
+                            </button>
+                        </div>
+
+                        <!-- MATERIAL CONTENT TEMA 2 -->
+                        <div id="material-tab-2" class="material-tab-content" style="display: none;">
+                            <h2 style="color: var(--primary); margin-bottom: 1rem;">Hakikat Khauf, Raja', Tawakal, dan Tobat</h2>
+                            <div class="material-content-box">
+                                <p>Dalam perjalanan spiritual menuju Allah, seorang muslim harus menyeimbangkan empat pilar pilar utama pilar hati:</p>
+                                
+                                <h3>1. Khauf (Rasa Takut)</h3>
+                                <p>Perasaan takut akan keagungan Allah SWT dan takut akan siksa-Nya akibat dosa yang dilakukan, sehingga mendorong hamba untuk menjauhi kemaksiatan.</p>
+
+                                <h3>2. Raja' (Rasa Harap)</h3>
+                                <p>Perasaan mengharap rahmat, ampunan, dan rida Allah SWT dengan senantiasa berprasangka baik (husnuzan) kepada-Nya.</p>
+
+                                <h3>3. Tawakal (Berserah Diri)</h3>
+                                <p>Berserah diri sepenuhnya kepada keputusan Allah SWT setelah melakukan usaha/ikhtiar secara maksimal.</p>
+
+                                <h3>4. Tobat (Kembali ke Jalan yang Benar)</h3>
+                                <p>Penyesalan mendalam atas dosa masa lalu, berhenti melakukan maksiat, dan bertekad kuat tidak mengulanginya lagi.</p>
+                            </div>
+                            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="completeTopic(2)">
+                                <i class="fa-solid fa-check-circle"></i> Selesaikan Tema 2 & Lanjut Game
+                            </button>
+                        </div>
+
+                        <!-- MATERIAL CONTENT TEMA 3 -->
+                        <div id="material-tab-3" class="material-tab-content" style="display: none;">
+                            <h2 style="color: var(--primary); margin-bottom: 1rem;">Penyakit Hati dan Cara Menghindarinya</h2>
+                            <div class="material-content-box">
+                                <p>Penyakit hati adalah sifat-sifat tercela (Akhlak Mazmumah) yang merusak pahala amal ibadah seseorang:</p>
+
+                                <ul>
+                                    <li><strong>Berfoya-foya (Israf/Tabzir):</strong> Menghamburkan harta secara berlebihan tanpa manfaat syar'i.</li>
+                                    <li><strong>Riya':</strong> Melakukan ibadah untuk mendapatkan pujian dari manusia.</li>
+                                    <li><strong>Sum'ah:</strong> Menceritakan atau memperdengarkan amal baik agar dipuji orang lain.</li>
+                                    <li><strong>Takabur:</strong> Merasa diri lebih unggul dan meremehkan orang lain.</li>
+                                    <li><strong>Hasad:</strong> Dengki dan tidak senang melihat orang lain mendapatkan nikmat.</li>
+                                    <li><strong>Ghadab:</strong> Sifat pemarah yang tidak terkontrol oleh akal sehat.</li>
+                                    <li><strong>Ghibah:</strong> Membicarakan keburukan orang lain yang tidak disukainya.</li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="completeTopic(3)">
+                                <i class="fa-solid fa-check-circle"></i> Selesaikan Seluruh Tema
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 4: MINI GAME ENGINE
+                     ========================================================================== -->
+                <section id="view-game" class="view-section">
+                    <div class="card game-container">
+                        <div class="game-header">
+                            <div>
+                                <h3 id="game-title">Mini Game PAI</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);" id="game-subtitle">Level 1 dari 5</p>
+                            </div>
+                            <div class="timer-badge">
+                                <i class="fa-solid fa-stopwatch"></i>
+                                <span id="game-timer">60</span>s
+                            </div>
+                        </div>
+
+                        <!-- GAME CONTENT AREA -->
+                        <div id="game-board" style="width: 100%;">
+                            <!-- Dynamic Content Rendered via JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 5: LATIHAN SOAL
+                     ========================================================================== -->
+                <section id="view-latihan" class="view-section">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h2><i class="fa-solid fa-pen-to-square"></i> Latihan Soal Per Tema</h2>
+                            <span id="latihan-number" style="font-weight: 700; color: var(--primary);">Soal 1 / 10</span>
+                        </div>
+
+                        <div id="latihan-box">
+                            <h3 id="latihan-question-text" style="font-weight: 600; margin-bottom: 1.5rem;">-</h3>
+                            <div class="options-list" id="latihan-options">
+                                <!-- Options dynamically rendered -->
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" id="btn-next-latihan" style="margin-top: 2rem; display: none;" onclick="nextLatihanSoal()">
+                            Soal Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 6: EVALUASI AKHIR
+                     ========================================================================== -->
+                <section id="view-evaluasi" class="view-section">
+                    <div class="card">
+                        <div id="evaluasi-start-screen" style="text-align: center; padding: 2rem;">
+                            <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                            <h2>Evaluasi Akhir Semester Ganjil</h2>
+                            <p style="color: var(--text-muted); margin-top: 0.5rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                                Evaluasi terdiri dari 10 soal acak. Pastikan Anda telah mempelajari semua tema dengan seksama.
+                            </p>
+                            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="startEvaluasi()">
+                                <i class="fa-solid fa-play"></i> Mulai Ujian Evaluasi
+                            </button>
+                        </div>
+
+                        <div id="evaluasi-quiz-screen" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3>Ujian Evaluasi PAI</h3>
+                                <div class="timer-badge"><i class="fa-solid fa-clock"></i> <span id="evaluasi-timer">10:00</span></div>
+                            </div>
+                            
+                            <h3 id="eval-question-text" style="margin-bottom: 1.5rem;">-</h3>
+                            <div class="options-list" id="eval-options"></div>
+
+                            <button class="btn btn-primary" id="btn-next-eval" style="margin-top: 2rem;" onclick="nextEvaluasiSoal()">
+                                Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+
+                        <div id="evaluasi-result-screen" style="display: none; text-align: center; padding: 2rem;">
+                            <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem;"></i>
+                            <h2>Hasil Evaluasi Anda</h2>
+                            <h1 style="font-size: 3.5rem; color: var(--primary); margin: 1rem 0;" id="eval-final-score">0</h1>
+                            <p id="eval-feedback-text">Bagus sekali!</p>
+                            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="navTo('beranda')">
+                                Kembali ke Beranda
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 7: RINGKASAN
+                     ========================================================================== -->
+                <section id="view-ringkasan" class="view-section">
+                    <div class="card">
+                        <h2 style="color: var(--primary); margin-bottom: 1.5rem;"><i class="fa-solid fa-box-archive"></i> Ringkasan Materi</h2>
+                        
+                        <div class="material-content-box">
+                            <p><strong>1. Mahabbah:</strong> Cinta tertinggi hamba kepada Allah SWT yang diwujudkan melalui ketaatan total, zikir, dan kepatuhan penuh.</p>
+                            <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border-color);">
+                            <p><strong>2. Pilar Spiritual:</strong> Khauf (takut dosa), Raja' (mengharap rahmat), Tawakal (berserah diri setelah ikhtiar), dan Tobat (penyesalan dan tidak mengulangi keburukan).</p>
+                            <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border-color);">
+                            <p><strong>3. Penyakit Hati:</strong> Sifat tercela seperti Riya', Sum'ah, Takabur, Hasad, dan Ghibah harus dihindari karena menghapus pahala kebaikan.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 8: REFERENSI
+                     ========================================================================== -->
+                <section id="view-referensi" class="view-section">
+                    <div class="card">
+                        <h2 style="color: var(--primary); margin-bottom: 1.5rem;"><i class="fa-solid fa-bookmark"></i> Referensi & Sumber Rujukan</h2>
+                        <ul style="line-height: 2; padding-left: 1.2rem;">
+                            <li>Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2021). <em>Buku Panduan Guru Pendidikan Agama Islam dan Budi Pekerti SMA/SMK Kelas X</em>. Jakarta: Kemendikbudristek.</li>
+                            <li>Al-Qur'an dan Terjemahannya. Kementerian Agama Republik Indonesia.</li>
+                            <li>Al-Ghazali, Imam. (2018). <em>Ihya 'Ulumuddin (Pembersihan Jiwa dan Akhlak)</em>. Jakarta: Pustaka Amani.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW 9: PROFIL PENYUSUN
+                     ========================================================================== -->
+                <section id="view-profil" class="view-section">
+                    <div class="card" style="text-align: center; padding: 2.5rem 1.5rem;">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem auto;">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <h2>Muhammad Sholeh, M.Pd.I</h2>
+                        <p style="color: var(--primary); font-weight: 600; margin-top: 0.25rem;">Guru PAI SMAN 1 Kunir</p>
+                        
+                        <div style="margin-top: 2rem; display: inline-block; text-align: left; background: var(--bg-base); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <p><strong>NIP:</strong> -</p>
+                            <p><strong>Instansi:</strong> SMAN 1 Kunir, Kabupaten Lumajang</p>
+                            <p><strong>Mata Pelajaran:</strong> PAI dan Budi Pekerti</p>
+                            <p><strong>Pengembangan:</strong> Media Pembelajaran Digital Interaktif berbasis Web HTML5/JS.</p>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="footer">
+                <p>&copy; 2026 Media Pembelajaran Interaktif PAI dan Budi Pekerti - SMAN 1 Kunir. All Rights Reserved.</p>
+            </footer>
+        </div>
     </div>
-</div>
 
-<script>
-    // Data Default & Inisialisasi LocalStorage
-    if (!localStorage.getItem('siswaDB')) localStorage.setItem('siswaDB', JSON.stringify([]));
-    if (!localStorage.getItem('absenDB')) localStorage.setItem('absenDB', JSON.stringify([]));
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
 
-    let html5QrcodeScanner = null;
+    <!-- SCROLL TO TOP BUTTON -->
+    <button class="scroll-top-btn" id="scroll-top" onclick="scrollToTop()">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
 
-    function showSection(id) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+    <!-- ==========================================================================
+         JAVASCRIPT LOGIC & ENGINE
+         ========================================================================== -->
+    <script>
+        /* ==========================================
+           1. CONFIGURATION & STATE MANAGEMENT
+           ========================================== */
+        const CONFIG = {
+            SECRET_PIN: "123456",
+            STORAGE_KEY: "PAI_MEDIA_PROGRESS_2026"
+        };
 
-        if (id === 'scan-sec') {
-            startScanner();
-        } else if (html5QrcodeScanner) {
-            html5QrcodeScanner.clear();
-        }
-    }
+        let state = {
+            user: { name: "", school: "" },
+            unlockedTema: 1, // Progress Lock (1, 2, or 3)
+            currentView: "beranda",
+            theme: "light",
+            gameScores: [0, 0, 0],
+            latihanProgress: { currentSoal: 0, score: 0 }
+        };
 
-    // Fitur Auth Admin
-    function login() {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
+        /* ==========================================
+           2. AUDIO SYNTHESIZER (WEB AUDIO API)
+           ========================================== */
+        const AudioEngine = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playClick() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            },
+            playCorrect() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.1); // E5
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            },
+            playWrong() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+        };
 
-        if (u === 'admin' && p === 'admin') {
-            showSection('admin-sec');
-            loadRekap();
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        } else {
-            alert('Username atau Password salah!');
-        }
-    }
-
-    function logout() {
-        showSection('login-sec');
-    }
-
-    // Fitur Tambah Siswa & Generate Barcode
-    function tambahSiswa() {
-        const nis = document.getElementById('nis').value.trim();
-        const nama = document.getElementById('nama').value.trim();
-        const kelas = document.getElementById('kelas').value.trim();
-
-        if (!nis || !nama || !kelas) {
-            alert('Harap isi semua kolom!');
-            return;
-        }
-
-        let siswaDB = JSON.parse(localStorage.getItem('siswaDB'));
-        if (siswaDB.some(s => s.nis === nis)) {
-            alert('NIS sudah terdaftar!');
-            return;
-        }
-
-        siswaDB.push({ nis, nama, kelas });
-        localStorage.setItem('siswaDB', JSON.stringify(siswaDB));
-
-        // Generate Barcode menggunakan JsBarcode
-        document.getElementById('barcode-card').style.display = 'block';
-        document.getElementById('card-nama').innerText = `${nama} (${kelas})`;
-        JsBarcode("#barcode", nis, { format: "CODE128", width: 2, height: 50 });
-
-        // Reset Form
-        document.getElementById('nis').value = '';
-        document.getElementById('nama').value = '';
-        document.getElementById('kelas').value = '';
-    }
-
-    // Fitur Rekapitulasi Data Absen
-    function loadRekap() {
-        const absenDB = JSON.parse(localStorage.getItem('absenDB')) || [];
-        const tbody = document.getElementById('rekap-table');
-        tbody.innerHTML = '';
-
-        absenDB.reverse().forEach(data => {
-            const row = `<tr>
-                <td>${data.waktu}</td>
-                <td>${data.nis}</td>
-                <td>${data.nama}</td>
-                <td>${data.kelas}</td>
-                <td><b>${data.sholat}</b></td>
-            </tr>`;
-            tbody.innerHTML += row;
+        /* ==========================================
+           3. INITIALIZATION & AUTHENTICATION
+           ========================================== */
+        document.addEventListener("DOMContentLoaded", () => {
+            loadStorage();
+            setupEventListeners();
+            checkAuth();
         });
-    }
 
-    // Fitur Scanning Kamera
-    function startScanner() {
-        if (html5QrcodeScanner) html5QrcodeScanner.clear();
-
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
-    }
-
-    function onScanSuccess(decodedText) {
-        const siswaDB = JSON.parse(localStorage.getItem('siswaDB')) || [];
-        const siswa = siswaDB.find(s => s.nis === decodedText);
-
-        if (siswa) {
-            const jenisSholat = document.getElementById('jenis-sholat').value;
-            const waktuSekarang = new Date().toLocaleString('id-ID');
-            
-            let absenDB = JSON.parse(localStorage.getItem('absenDB'));
-            
-            // Simpan data absensi
-            absenDB.push({
-                waktu: waktuSekarang,
-                nis: siswa.nis,
-                nama: siswa.nama,
-                kelas: siswa.kelas,
-                sholat: jenisSholat
-            });
-            
-            localStorage.setItem('absenDB', JSON.stringify(absenDB));
-            
-            const resultDiv = document.getElementById('scan-result');
-            resultDiv.innerText = `[SUCCESS] Absen ${jenisSholat} Berhasil: ${siswa.nama} (${siswa.kelas})`;
-            
-            // Suara bip atau penanda sukses dapat ditambahkan di sini
-            setTimeout(() => { resultDiv.innerText = ''; }, 3000);
-        } else {
-            alert('Barcode tidak dikenali / Siswa tidak terdaftar!');
+        function checkAuth() {
+            if (state.user && state.user.name) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                updateUserUI();
+                renderProgress();
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+            }
         }
-    }
-</script>
 
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            AudioEngine.playClick();
+            
+            const name = document.getElementById('student-name').value.trim();
+            const school = document.getElementById('student-school').value.trim();
+            const pin = document.getElementById('secret-pin').value.trim();
+
+            if (pin !== CONFIG.SECRET_PIN) {
+                showToast("PIN salah! Gunakan PIN standar: 123456", "danger");
+                AudioEngine.playWrong();
+                return;
+            }
+
+            state.user = { name, school };
+            saveStorage();
+            checkAuth();
+            showToast(`Selamat datang, ${name}!`);
+            AudioEngine.playCorrect();
+        });
+
+        function logout() {
+            AudioEngine.playClick();
+            if (confirm("Apakah Anda yakin ingin keluar? Progress akan tetap tersimpan.")) {
+                state.user = { name: "", school: "" };
+                saveStorage();
+                location.reload();
+            }
+        }
+
+        /* ==========================================
+           4. NAVIGATION & VIEW CONTROLLER
+           ========================================== */
+        function navTo(viewId) {
+            AudioEngine.playClick();
+            
+            // Hide all view sections
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+
+            // Show selected view
+            const targetView = document.getElementById(`view-${viewId}`);
+            if (targetView) {
+                targetView.classList.add('active');
+                state.currentView = viewId;
+                
+                // Update Breadcrumb & Nav Links
+                document.getElementById('breadcrumb-current').textContent = capitalize(viewId);
+                const activeLink = document.querySelector(`.sidebar-link[onclick="navTo('${viewId}')"]`);
+                if (activeLink) activeLink.classList.add('active');
+                
+                // Close sidebar on mobile
+                if (window.innerWidth <= 992) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSidebar() {
+            AudioEngine.playClick();
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function toggleTheme() {
+            AudioEngine.playClick();
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', state.theme);
+            document.getElementById('theme-icon').className = state.theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            saveStorage();
+        }
+
+        /* ==========================================
+           5. PROGRESS & LOCKING ENGINE
+           ========================================== */
+        function openTema(temaNum) {
+            if (temaNum > state.unlockedTema) {
+                showToast(`Selesaikan Tema ${state.unlockedTema} terlebih dahulu!`, "danger");
+                AudioEngine.playWrong();
+                return;
+            }
+            navTo('materi');
+            switchMaterialTab(temaNum);
+        }
+
+        function switchMaterialTab(tabNum) {
+            AudioEngine.playClick();
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.material-tab-content').forEach(box => box.style.display = 'none');
+
+            document.querySelectorAll('.tab-btn')[tabNum - 1].classList.add('active');
+            document.getElementById(`material-tab-${tabNum}`).style.display = 'block';
+        }
+
+        function completeTopic(temaNum) {
+            AudioEngine.playCorrect();
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+            if (temaNum === state.unlockedTema && state.unlockedTema < 3) {
+                state.unlockedTema++;
+                saveStorage();
+                renderProgress();
+                showToast(`Selamat! Tema ${temaNum + 1} berhasil terbuka.`);
+            } else {
+                showToast("Materi tema selesai dipelajari!");
+            }
+
+            // Launch Game for topic
+            startMiniGame(temaNum);
+        }
+
+        function renderProgress() {
+            const percentage = Math.round(((state.unlockedTema - 1) / 2) * 100);
+            document.getElementById('total-progress-percentage').textContent = `${percentage}%`;
+            document.getElementById('total-progress-fill').style.width = `${percentage}%`;
+
+            // Update Lock UI
+            for (let i = 2; i <= 3; i++) {
+                const card = document.getElementById(`card-tema-${i}`);
+                const btn = document.getElementById(`btn-tema-${i}`);
+                const badge = document.getElementById(`badge-tema-${i}`);
+                const tabBtn = document.getElementById(`tab-btn-${i}`);
+
+                if (i <= state.unlockedTema) {
+                    card.classList.remove('locked');
+                    btn.removeAttribute('disabled');
+                    if (badge) badge.style.display = 'none';
+                    if (tabBtn) tabBtn.removeAttribute('disabled');
+                } else {
+                    card.classList.add('locked');
+                    btn.setAttribute('disabled', 'true');
+                    if (badge) badge.style.display = 'flex';
+                }
+            }
+        }
+
+        /* ==========================================
+           6. MINI GAME ENGINE (DRAG & DROP, MATCHING, MEMORY)
+           ========================================== */
+        let gameTimerInterval = null;
+
+        function startMiniGame(level = 1) {
+            navTo('game');
+            const board = document.getElementById('game-board');
+            const timerEl = document.getElementById('game-timer');
+            document.getElementById('game-title').textContent = `Mini Game - Tema ${level}`;
+            
+            let timeLeft = 60;
+            timerEl.textContent = timeLeft;
+            clearInterval(gameTimerInterval);
+
+            gameTimerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(gameTimerInterval);
+                    showToast("Waktu game habis!", "danger");
+                    AudioEngine.playWrong();
+                    navTo('beranda');
+                }
+            }, 1000);
+
+            // Render Game Type based on Level
+            if (level === 1) {
+                // Game 1: Matching / Drag & Drop
+                board.innerHTML = `
+                    <p style="text-align:center; margin-bottom:1rem;">Cocokkan Kata dengan Arti yang Tepat!</p>
+                    <div class="drag-zone">
+                        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="drag1">Mahabbah</div>
+                        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="drag2">Rida</div>
+                    </div>
+                    <div class="drop-zone" ondrop="drop(event, 'Cinta Kepada Allah')" ondragover="allowDrop(event)">
+                        Target 1: Cinta Kepada Allah
+                    </div>
+                    <div class="drop-zone" ondrop="drop(event, 'Kelarasan/Kerelaan Allah')" ondragover="allowDrop(event)" style="margin-top:0.5rem;">
+                        Target 2: Kelarasan/Kerelaan Allah
+                    </div>
+                `;
+            } else if (level === 2) {
+                // Game 2: Memory Card
+                board.innerHTML = `
+                    <div class="memory-grid">
+                        <div class="memory-card" onclick="flipCard(this, 'Khauf')">?</div>
+                        <div class="memory-card" onclick="flipCard(this, 'Raja')">?</div>
+                        <div class="memory-card" onclick="flipCard(this, 'Khauf')">?</div>
+                        <div class="memory-card" onclick="flipCard(this, 'Raja')">?</div>
+                    </div>
+                `;
+            } else {
+                // Game 3: Quick Quiz
+                board.innerHTML = `
+                    <h3>Apakah Riya' termasuk Penyakit Hati?</h3>
+                    <div class="options-list">
+                        <button class="option-btn" onclick="checkGameAnswer(true)">Ya, Benar</button>
+                        <button class="option-btn" onclick="checkGameAnswer(false)">Bukan</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Drag and Drop Helper Functions
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+        function drop(ev, expectedTarget) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedEl = document.getElementById(data);
+            
+            if ((data === "drag1" && expectedTarget.includes("Cinta")) || (data === "drag2" && expectedTarget.includes("Kerelaan"))) {
+                ev.target.appendChild(draggedEl);
+                AudioEngine.playCorrect();
+                showToast("Jawaban Benar!");
+                clearInterval(gameTimerInterval);
+                confetti({ particleCount: 50 });
+            } else {
+                AudioEngine.playWrong();
+                showToast("Pasangan kurang tepat", "danger");
+            }
+        }
+
+        let flippedCards = [];
+        function flipCard(card, text) {
+            if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
+                AudioEngine.playClick();
+                card.classList.add('flipped');
+                card.textContent = text;
+                flippedCards.push({ card, text });
+
+                if (flippedCards.length === 2) {
+                    if (flippedCards[0].text === flippedCards[1].text) {
+                        AudioEngine.playCorrect();
+                        flippedCards = [];
+                        clearInterval(gameTimerInterval);
+                        confetti({ particleCount: 80 });
+                    } else {
+                        setTimeout(() => {
+                            AudioEngine.playWrong();
+                            flippedCards.forEach(c => {
+                                c.card.classList.remove('flipped');
+                                c.card.textContent = '?';
+                            });
+                            flippedCards = [];
+                        }, 1000);
+                    }
+                }
+            }
+        }
+
+        function checkGameAnswer(isCorrect) {
+            if (isCorrect) {
+                AudioEngine.playCorrect();
+                clearInterval(gameTimerInterval);
+                confetti({ particleCount: 100 });
+                showToast("Jawaban Tepat!");
+            } else {
+                AudioEngine.playWrong();
+                showToast("Jawaban Salah!", "danger");
+            }
+        }
+
+        /* ==========================================
+           7. LATIHAN & EVALUASI ENGINE
+           ========================================== */
+        const LATIHAN_SOAL = [
+            { q: "Apa arti utama dari konsep Mahabbah?", opt: ["Ketakutan", "Cinta mendalam", "Kepasrahan", "Penyesalan"], ans: 1 },
+            { q: "Sikap berserah diri kepada keputusan Allah setelah berikhtiar disebut...", opt: ["Khauf", "Raja'", "Tawakal", "Tobat"], ans: 2 },
+            { q: "Sifat berfoya-foya dalam Islam dikenal dengan istilah...", opt: ["Israf", "Riya'", "Hasad", "Sum'ah"], ans: 0 },
+            { q: "Mengharap ampunan dan rahmat Allah SWT disebut...", opt: ["Khauf", "Raja'", "Ghadab", "Takabur"], ans: 1 },
+            { q: "Beribadah hanya agar dipuji oleh sesama manusia adalah contoh sifat...", opt: ["Sum'ah", "Riya'", "Hasad", "Ghibah"], ans: 1 },
+            { q: "Menceritakan amal kebaikan kepada orang lain agar populer disebut...", opt: ["Sum'ah", "Takabur", "Ghadab", "Israf"], ans: 0 },
+            { q: "Perasaan tidak senang jika orang lain mendapat nikmat Allah disebut...", opt: ["Ghidah", "Hasad", "Takabur", "Riya'"], ans: 1 },
+            { q: "Syarat utama diterimanya tobat seorang hamba adalah...", opt: ["Menyesali dosa", "Meminta pujian", "Berfoya-foya", "Acuh tak acuh"], ans: 0 },
+            { q: "Sifat pemarah yang tidak terkendali disebut...", opt: ["Ghadab", "Ghibah", "Hasad", "Riya'"], ans: 0 },
+            { q: "Membicarakan keburukan orang lain tanpa hadirnya orang tersebut adalah...", opt: ["Ghibah", "Takabur", "Sum'ah", "Israf"], ans: 0 }
+        ];
+
+        let currentLatihanIndex = 0;
+
+        function loadLatihanSoal() {
+            const q = LATIHAN_SOAL[currentLatihanIndex];
+            document.getElementById('latihan-number').textContent = `Soal ${currentLatihanIndex + 1} / 10`;
+            document.getElementById('latihan-question-text').textContent = q.q;
+            
+            const optsContainer = document.getElementById('latihan-options');
+            optsContainer.innerHTML = '';
+
+            q.opt.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = optText;
+                btn.onclick = () => selectLatihanOption(idx, q.ans, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById('btn-next-latihan').style.display = 'none';
+        }
+
+        function selectLatihanOption(selectedIdx, correctIdx, btnEl) {
+            const buttons = document.querySelectorAll('#latihan-options .option-btn');
+            buttons.forEach(b => b.style.pointerEvents = 'none');
+
+            if (selectedIdx === correctIdx) {
+                btnEl.classList.add('correct');
+                AudioEngine.playCorrect();
+            } else {
+                btnEl.classList.add('wrong');
+                buttons[correctIdx].classList.add('correct');
+                AudioEngine.playWrong();
+            }
+
+            document.getElementById('btn-next-latihan').style.display = 'inline-flex';
+        }
+
+        function nextLatihanSoal() {
+            AudioEngine.playClick();
+            currentLatihanIndex++;
+            if (currentLatihanIndex < LATIHAN_SOAL.length) {
+                loadLatihanSoal();
+            } else {
+                showToast("Latihan Soal Selesai!");
+                currentLatihanIndex = 0;
+                navTo('beranda');
+            }
+        }
+
+        // EVALUASI ENGINE
+        let evalScore = 0;
+        let evalIndex = 0;
+
+        function startEvaluasi() {
+            AudioEngine.playClick();
+            document.getElementById('evaluasi-start-screen').style.display = 'none';
+            document.getElementById('evaluasi-quiz-screen').style.display = 'block';
+            evalScore = 0;
+            evalIndex = 0;
+            loadEvaluasiSoal();
+        }
+
+        function loadEvaluasiSoal() {
+            const q = LATIHAN_SOAL[evalIndex];
+            document.getElementById('eval-question-text').textContent = `${evalIndex + 1}. ${q.q}`;
+            const opts = document.getElementById('eval-options');
+            opts.innerHTML = '';
+
+            q.opt.forEach((o, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = o;
+                btn.onclick = () => {
+                    document.querySelectorAll('#eval-options .option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    btn.dataset.selected = i;
+                };
+                opts.appendChild(btn);
+            });
+        }
+
+        function nextEvaluasiSoal() {
+            const selected = document.querySelector('#eval-options .option-btn.selected');
+            if (!selected) {
+                showToast("Pilih salah satu jawaban!", "danger");
+                return;
+            }
+
+            if (parseInt(selected.dataset.selected) === LATIHAN_SOAL[evalIndex].ans) {
+                evalScore += 10;
+            }
+
+            evalIndex++;
+            if (evalIndex < LATIHAN_SOAL.length) {
+                loadEvaluasiSoal();
+            } else {
+                // Show Result Screen
+                document.getElementById('evaluasi-quiz-screen').style.display = 'none';
+                document.getElementById('evaluasi-result-screen').style.display = 'block';
+                document.getElementById('eval-final-score').textContent = evalScore;
+                confetti({ particleCount: 150, spread: 90 });
+            }
+        }
+
+        /* ==========================================
+           8. STORAGE & UTILITY HELPERS
+           ========================================== */
+        function saveStorage() {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadStorage() {
+            const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = { ...state, ...JSON.parse(saved) };
+                    document.documentElement.setAttribute('data-theme', state.theme || 'light');
+                } catch(e) { console.error("Error loading state", e); }
+            }
+            loadLatihanSoal();
+        }
+
+        function updateUserUI() {
+            document.getElementById('user-display-name').textContent = state.user.name || "Siswa";
+            document.getElementById('user-display-school').textContent = state.user.school || "Sekolah";
+            document.getElementById('welcome-name').textContent = state.user.name || "Siswa";
+            document.getElementById('avatar-initial').textContent = (state.user.name || "S").charAt(0).toUpperCase();
+        }
+
+        function showToast(msg, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderLeft = type === 'danger' ? '4px solid var(--danger)' : '4px solid var(--success)';
+            toast.innerHTML = `<i class="fa-solid ${type === 'danger' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i> ${msg}`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onscroll = () => {
+            const scrollBtn = document.getElementById('scroll-top');
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                scrollBtn.style.display = 'flex';
+            } else {
+                scrollBtn.style.display = 'none';
+            }
+        };
+    </script>
 </body>
 </html>
